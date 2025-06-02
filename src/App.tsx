@@ -1,11 +1,18 @@
-import './App.css'
+import React from 'react';
+import AutoComplete from './components/AutoComplete';
 
-function App() {
+import './App.css';
+
+const App: React.FC = () => {
+  const handleSelect = (country: any) => {
+    console.log('Selected Country:', country);
+  };
+
   return (
-    <div>
-      <input type="text" placeholder="Enter your name" />
+    <div className='container'>
+      <AutoComplete onSelect={handleSelect} />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
