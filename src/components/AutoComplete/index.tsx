@@ -1,78 +1,69 @@
 import React, { useState, useEffect, useRef } from 'react';
-// import type { Country } from '../../mock';
-// import { allCountriesMock } from '../../mock';
-import { MOCK, type Film } from '../../mock-films';
 
-// import parse from './autosuggest-highlight/parse';
-// import match from './autosuggest-highlight/match';
+import match, { type MatchType } from '../../utils/match';
+import parse, { type PartType } from '../../utils/parser';
+import debounce from '../../utils/debounce';
 
+import { MOCK, type Film } from './mock';
 import './styles.css';
 
-interface AutoCompleteProps {
-    onSelect: (country: Film | null) => void;
-}
-
-export default function AutoComplete({ onSelect }: AutoCompleteProps) {
-    const [countries, setCountries] = useState<Film[]>([]);
-    const [filteredCountries, setFilteredCountries] = useState<Film[]>([]);
+export default function AutoComplete() {
+    const [films, setFilms] = useState<Film[]>([]);
+    const [filtered, setFiltered] = useState<Film[]>([]);
     const [query, setQuery] = useState<string>('');
     const [isLoading, setLoading] = useState(false);
     const [isFocused, setFocused] = useState(false);
-    const [highlightIndex, setHighlightIndex] = useState<number>(-1);
-    const THREE_SECONDS = 3000;
+    const ONE_SECONDS = 3000;
+    const QUERY_DEBOUNCE_DELAY = 500;
 
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const getFilmsAsync = async () => {
+        await new Promise((resolve) => {
+            setFilms(MOCK);
+            setFiltered(MOCK);
+            resolve(true);
+            setLoading(false)
+        });
+    }
+
     useEffect(() => {
-        return;
-        if (!isFocused || countries.length > 0) return;
-
         setLoading(true);
-        const tm = setTimeout(() => {
-            setCountries(MOCK);
-            setFilteredCountries(MOCK);
-            setLoading(false);
-        }, THREE_SECONDS);
-        return () => clearTimeout(tm);
-    }, [isFocused ]);
-
-    const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        return;
-        const searchQuery = e.target.value;
-        setQuery(searchQuery);
-
-        if (searchQuery.trim() === '') {
-            setFilteredCountries(countries);
-            return;
-        }
-
-        setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        const filtered = countries.filter((country) =>
-            country.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setFilteredCountries(filtered);
-        setLoading(false);
-        setHighlightIndex(-1);
-    };
+        const timeout = setTimeout(() => getFilmsAsync(), ONE_SECONDS);
+        return () => clearTimeout(timeout);
+    }, []);
 
     const handleSelect = (film: Film) => {
-        return;
         setQuery(film.title);
-        setFilteredCountries([]);
+        setFiltered([]);
         setFocused(false);
-        onSelect(film);
     };
 
     const closeDropdown = (event: MouseEvent) => {
-        return;
         if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
             setFocused(false);
         }
     };
 
+    const debouncedHandleInputChange = debounce(async (searchQuery: string) => {
+        if (searchQuery.trim() === '') {
+            setFiltered(films);
+            return;
+        }
+
+        const filtered = films.filter((country) =>
+            country.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setFiltered(filtered);
+    }, QUERY_DEBOUNCE_DELAY);
+
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const searchQuery = event.target.value;
+        setQuery(searchQuery);
+        debouncedHandleInputChange(searchQuery);
+    };
+
     useEffect(() => {
-        return;
         document.addEventListener('mousedown', closeDropdown);
         return () => {
             document.removeEventListener('mousedown', closeDropdown);
@@ -99,22 +90,31 @@ export default function AutoComplete({ onSelect }: AutoCompleteProps) {
                     className="autocomplete"
                 />
                 {isFocused && isLoading && <div className="spinner" />}
-                {!isLoading && query.length > 2 &&  <button className='clear-button'>X</button>}
             </div>
 
             {isFocused && <ul className="dropdown">
-                {isLoading && filteredCountries.length === 0 && <li className='loading-item' key="loading">Loading...</li>}
-                {isFocused && filteredCountries.map((film, index) => (
-                    <li
-                        key={`${film.title}-${film.year}`}
-                        onClick={() => handleSelect(film)}
-                        className={index === highlightIndex ? 'highlight' : ''}
-                    >
-                        <span style={{ marginLeft: '8px', color: '#333' }}>
-                            {film.title}
-                        </span>
-                    </li>
-                ))}
+                {isLoading && filtered.length === 0 && <li className='loading-item' key="loading">Loading...</li>}
+                {isFocused && filtered.map(data => {
+                    const queryMatches: MatchType[] = match(data.title, query);
+                    const textParts: PartType[] = parse(data.title, queryMatches);
+                    return (
+                        <li
+                            key={`${data.title}-${data.year}`}
+                            onClick={() => handleSelect(data)}
+                        >
+                            {textParts.map((part, partIndex) => (
+                                <span
+                                    key={partIndex}
+                                    style={{
+                                        fontWeight: part.highlight ? 'bold' : 'normal',
+                                    }}
+                                >
+                                    {part.text}
+                                </span>
+                            ))}
+                        </li>
+                    )
+                })}
             </ul>}
         </div>
     );

@@ -27,11 +27,13 @@
   outline: none;
   margin: 0;
   padding: 0;
+  font-size: 16px;
+  color: #999;
 }
 
 .clear-button:hover {
   border-radius: 50%;
-  background-color: lightgray;
+  background-color: #EEE;
 }
 
 .clear-button:focus {
@@ -50,6 +52,10 @@
   top: calc(50% - 12px);
   right: -22px;
   transform: translateY(-50%);
+}
+
+.loading-item {
+  color: darkgray;
 }
 
 @keyframes spin {
@@ -87,10 +93,6 @@ li {
   padding: 8px 16px;
 }
 
-.loading-item {
-  color: darkgray;
-}
-
 li:hover {
-  background-color: #f0f0f0; /* Highlight hovered items */
+  background-color: #f0f0f0;
 }
