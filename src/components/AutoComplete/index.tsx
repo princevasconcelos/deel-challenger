@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Country } from '../../mock';
-import { allCountriesMock } from '../../mock';
+// import type { Country } from '../../mock';
+// import { allCountriesMock } from '../../mock';
+import { MOCK, type Film } from '../../mock-films';
+
+// import parse from './autosuggest-highlight/parse';
+// import match from './autosuggest-highlight/match';
 
 import './styles.css';
 
 interface AutoCompleteProps {
-    onSelect: (country: Country | null) => void;
+    onSelect: (country: Film | null) => void;
 }
 
 export default function AutoComplete({ onSelect }: AutoCompleteProps) {
-    const [countries, setCountries] = useState<Country[]>([]);
-    const [filteredCountries, setFilteredCountries] = useState<Country[]>([]);
+    const [countries, setCountries] = useState<Film[]>([]);
+    const [filteredCountries, setFilteredCountries] = useState<Film[]>([]);
     const [query, setQuery] = useState<string>('');
     const [isLoading, setLoading] = useState(false);
     const [isFocused, setFocused] = useState(false);
@@ -20,18 +24,20 @@ export default function AutoComplete({ onSelect }: AutoCompleteProps) {
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        return;
         if (!isFocused || countries.length > 0) return;
 
         setLoading(true);
         const tm = setTimeout(() => {
-            setCountries(allCountriesMock);
-            setFilteredCountries(allCountriesMock);
+            setCountries(MOCK);
+            setFilteredCountries(MOCK);
             setLoading(false);
         }, THREE_SECONDS);
         return () => clearTimeout(tm);
     }, [isFocused ]);
 
     const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        return;
         const searchQuery = e.target.value;
         setQuery(searchQuery);
 
@@ -43,27 +49,30 @@ export default function AutoComplete({ onSelect }: AutoCompleteProps) {
         setLoading(true);
         await new Promise((resolve) => setTimeout(resolve, 300));
         const filtered = countries.filter((country) =>
-            country.name.toLowerCase().includes(searchQuery.toLowerCase())
+            country.title.toLowerCase().includes(searchQuery.toLowerCase())
         );
         setFilteredCountries(filtered);
         setLoading(false);
         setHighlightIndex(-1);
     };
 
-    const handleSelect = (country: Country) => {
-        setQuery(country.name);
+    const handleSelect = (film: Film) => {
+        return;
+        setQuery(film.title);
         setFilteredCountries([]);
         setFocused(false);
-        onSelect(country);
+        onSelect(film);
     };
 
     const closeDropdown = (event: MouseEvent) => {
+        return;
         if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
             setFocused(false);
         }
     };
 
     useEffect(() => {
+        return;
         document.addEventListener('mousedown', closeDropdown);
         return () => {
             document.removeEventListener('mousedown', closeDropdown);
@@ -86,7 +95,7 @@ export default function AutoComplete({ onSelect }: AutoCompleteProps) {
                     value={query}
                     onChange={handleInputChange}
                     onFocus={handleFocus}
-                    placeholder="Choose a country"
+                    placeholder="Choose a film"
                     className="autocomplete"
                 />
                 {isFocused && isLoading && <div className="spinner" />}
@@ -95,20 +104,14 @@ export default function AutoComplete({ onSelect }: AutoCompleteProps) {
 
             {isFocused && <ul className="dropdown">
                 {isLoading && filteredCountries.length === 0 && <li className='loading-item' key="loading">Loading...</li>}
-                {isFocused && filteredCountries.map((country, index) => (
+                {isFocused && filteredCountries.map((film, index) => (
                     <li
-                        key={`${country.code}-${country.abbr}`}
-                        onClick={() => handleSelect(country)}
+                        key={`${film.title}-${film.year}`}
+                        onClick={() => handleSelect(film)}
                         className={index === highlightIndex ? 'highlight' : ''}
                     >
-                        <img
-                            loading="lazy"
-                            width="20"
-                            src={`https://flagcdn.com/w20/${country.abbr.toLowerCase()}.png`}
-                            alt={`${country.name} flag`}
-                        />
-                        <span style={{ marginLeft: '8px', color: '#888' }}>
-                            (+{country.code}) {country.name}
+                        <span style={{ marginLeft: '8px', color: '#333' }}>
+                            {film.title}
                         </span>
                     </li>
                 ))}
