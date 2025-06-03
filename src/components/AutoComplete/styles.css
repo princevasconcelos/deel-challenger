@@ -1,0 +1,96 @@
+.autocomplete {
+  width: 100%;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  padding: 16px;
+  line-height: 24px;
+}
+
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
+.form {
+  width: 300px;
+}
+
+.clear-button {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  top: calc(50% - 14px);
+  right: -20px;
+  background: transparent;
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
+}
+
+.clear-button:hover {
+  border-radius: 50%;
+  background-color: lightgray;
+}
+
+.clear-button:focus {
+  outline: none;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  position: absolute;
+  top: calc(50% - 12px);
+  right: -22px;
+  transform: translateY(-50%);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+ul {
+  position: absolute;
+  top: 100%;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-top: none;
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 332px;
+}
+
+li {
+  padding: 8px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  position: relative;
+  min-height: 30px;
+  font-size: 16px;
+  padding: 8px 16px;
+}
+
+.loading-item {
+  color: darkgray;
+}
+
+li:hover {
+  background-color: #f0f0f0; /* Highlight hovered items */
+}
