@@ -1,3 +1,5 @@
+# Deel Challenger
+
 # 1) What is the difference between Component and PureComponent? give an example where it might break my app.
 
 In React, both Component and PureComponent are base classes for creating custom components, but they differ in how they handle updates and re-renders.
