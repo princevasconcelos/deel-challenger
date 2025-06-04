@@ -7,6 +7,17 @@
   line-height: 24px;
 }
 
+.not-found {
+  color: crimson;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 333px;
+  text-align: center;
+  top: -55px;
+  position: absolute;
+}
+
 .input-container {
   position: relative;
   width: 100%;

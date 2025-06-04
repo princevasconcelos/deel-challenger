@@ -9,31 +9,47 @@ import './styles.css';
 
 export default function AutoComplete() {
     const [films, setFilms] = useState<Film[]>([]);
+    const [error, setError] = useState<boolean>(false);
     const [filtered, setFiltered] = useState<Film[]>([]);
     const [query, setQuery] = useState<string>('');
     const [isLoading, setLoading] = useState(false);
     const [isFocused, setFocused] = useState(false);
-    const ONE_SECONDS = 3000;
-    const QUERY_DEBOUNCE_DELAY = 500;
+    const GET_FILMS_REQUEST_DELAY = 3000;
+    const QUERY_DEBOUNCE_DELAY = 1000;
+    const FILTER_DELAY = 1000;
 
     const containerRef = useRef<HTMLDivElement>(null);
 
     const getFilmsAsync = async () => {
-        await new Promise((resolve) => {
-            setFilms(MOCK);
-            setFiltered(MOCK);
-            resolve(true);
-            setLoading(false)
+        return new Promise<Film[]>((resolve) => {
+            setTimeout(() => {
+                resolve(MOCK);
+            }, GET_FILMS_REQUEST_DELAY);
         });
-    }
+    };
+
+    const fetchFilms = async () => {
+        setLoading(true);
+        const data = await getFilmsAsync();
+        setFilms(data);
+        setFiltered(data);
+        setLoading(false);
+    };
 
     useEffect(() => {
-        setLoading(true);
-        const timeout = setTimeout(() => getFilmsAsync(), ONE_SECONDS);
-        return () => clearTimeout(timeout);
+        fetchFilms();
     }, []);
 
-    const handleSelect = (film: Film) => {
+    useEffect(() => {
+        document.addEventListener('mousedown', closeDropdown);
+        return () => document.removeEventListener('mousedown', closeDropdown);
+    }, []);
+
+    useEffect(() => {
+        if (error) setError(false);
+    }, [query])
+
+    const handleItemSelected = (film: Film) => {
         setQuery(film.title);
         setFiltered([]);
         setFocused(false);
@@ -51,10 +67,20 @@ export default function AutoComplete() {
             return;
         }
 
-        const filtered = films.filter((country) =>
-            country.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        setLoading(true);
+        const filtered = await new Promise<Film[]>((resolve) => {
+            setTimeout(() => {
+                resolve(
+                    films.filter((country) =>
+                        country.title.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                );
+            }, FILTER_DELAY);
+        });
+
+        setError(filtered.length === 0 && Boolean(searchQuery));
         setFiltered(filtered);
+        setLoading(false);
     }, QUERY_DEBOUNCE_DELAY);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,16 +89,7 @@ export default function AutoComplete() {
         debouncedHandleInputChange(searchQuery);
     };
 
-    useEffect(() => {
-        document.addEventListener('mousedown', closeDropdown);
-        return () => {
-            document.removeEventListener('mousedown', closeDropdown);
-        };
-    }, []);
-
-    const handleFocus = () => {
-        setFocused(true);
-    };
+    const handleInputFocus = () => setFocused(true);
 
     return (
         <div
@@ -80,27 +97,29 @@ export default function AutoComplete() {
             className="form"
             style={{ position: 'relative' }}
         >
+            {error && !isLoading && <p className='not-found'>No match found for <b>"{query}"</b></p>}
             <div className='input-container'>
                 <input
                     type="text"
                     value={query}
                     onChange={handleInputChange}
-                    onFocus={handleFocus}
+                    onFocus={handleInputFocus}
                     placeholder="Choose a film"
+                    maxLength={25}
                     className="autocomplete"
                 />
                 {isFocused && isLoading && <div className="spinner" />}
             </div>
 
             {isFocused && <ul className="dropdown">
-                {isLoading && filtered.length === 0 && <li className='loading-item' key="loading">Loading...</li>}
-                {isFocused && filtered.map(data => {
+                {isLoading && <li className='loading-item' key="loading">Loading...</li>}
+                {isFocused && !isLoading && filtered.map(data => {
                     const queryMatches: MatchType[] = match(data.title, query);
                     const textParts: PartType[] = parse(data.title, queryMatches);
                     return (
                         <li
                             key={`${data.title}-${data.year}`}
-                            onClick={() => handleSelect(data)}
+                            onClick={() => handleItemSelected(data)}
                         >
                             {textParts.map((part, partIndex) => (
                                 <span
