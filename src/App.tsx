@@ -5,9 +5,12 @@ import './App.css';
 
 const App: React.FC = () => {
   return (
-    <div className='container'>
-      <AutoComplete />
-    </div>
+    <>
+      <span className='version'>v0.0.1</span>
+      <div className='container'>
+        <AutoComplete />
+      </div>
+    </>
   );
 };
 

@@ -16,24 +16,39 @@ export default function AutoComplete() {
     const [isFocused, setFocused] = useState(false);
     const GET_FILMS_REQUEST_DELAY = 3000;
     const QUERY_DEBOUNCE_DELAY = 1000;
-    const FILTER_DELAY = 1000;
 
     const containerRef = useRef<HTMLDivElement>(null);
+    const abortController = useRef<AbortController | null>(null);
 
-    const getFilmsAsync = async () => {
-        return new Promise<Film[]>((resolve) => {
-            setTimeout(() => {
-                resolve(MOCK);
+    const getFilmsAsync = async (signal: AbortSignal) => {
+        return new Promise<Film[]>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                if (signal.aborted) {
+                    reject("Request Aborted");
+                } else {
+                    resolve(MOCK);
+                }
             }, GET_FILMS_REQUEST_DELAY);
+
+            signal.addEventListener("abort", () => clearTimeout(timeout));
         });
     };
 
     const fetchFilms = async () => {
+        abortController.current?.abort();
+        abortController.current = new AbortController();
+        const { signal } = abortController.current;
+
         setLoading(true);
-        const data = await getFilmsAsync();
-        setFilms(data);
-        setFiltered(data);
-        setLoading(false);
+        try {
+            const data = await getFilmsAsync(signal);
+            setFilms(data);
+            setFiltered(data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -47,10 +62,10 @@ export default function AutoComplete() {
 
     useEffect(() => {
         if (error) setError(false);
-    }, [query])
+    }, [query]);
 
     const handleItemSelected = (film: Film) => {
-        setQuery(film.title);
+        setQuery(film.Title);
         setFiltered([]);
         setFocused(false);
     };
@@ -67,20 +82,35 @@ export default function AutoComplete() {
             return;
         }
 
-        setLoading(true);
-        const filtered = await new Promise<Film[]>((resolve) => {
-            setTimeout(() => {
-                resolve(
-                    films.filter((country) =>
-                        country.title.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
-                );
-            }, FILTER_DELAY);
-        });
+        abortController.current?.abort();
+        abortController.current = new AbortController();
+        const { signal } = abortController.current;
 
-        setError(filtered.length === 0 && Boolean(searchQuery));
-        setFiltered(filtered);
-        setLoading(false);
+        setLoading(true);
+        try {
+            const filtered = await new Promise<Film[]>((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    if (signal.aborted) {
+                        reject("Request Aborted");
+                    } else {
+                        resolve(
+                            films.filter((film) =>
+                                film.Title.toLowerCase().includes(searchQuery.toLowerCase())
+                            )
+                        );
+                    }
+                }, 300);
+
+                signal.addEventListener("abort", () => clearTimeout(timeout));
+            });
+
+            setError(Boolean(searchQuery) && filtered.length === 0);
+            setFiltered(filtered);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     }, QUERY_DEBOUNCE_DELAY);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +127,7 @@ export default function AutoComplete() {
             className="form"
             style={{ position: 'relative' }}
         >
-            {error && !isLoading && <p className='not-found'>No match found for <b>"{query}"</b></p>}
+            {error && !isLoading && query && <p className='not-found'>No match found for <b>"{query}"</b></p>}
             <div className='input-container'>
                 <input
                     type="text"
@@ -112,13 +142,12 @@ export default function AutoComplete() {
             </div>
 
             {isFocused && <ul className="dropdown">
-                {isLoading && <li className='loading-item' key="loading">Loading...</li>}
                 {isFocused && !isLoading && filtered.map(data => {
-                    const queryMatches: MatchType[] = match(data.title, query);
-                    const textParts: PartType[] = parse(data.title, queryMatches);
+                    const queryMatches: MatchType[] = match(data.Title, query);
+                    const textParts: PartType[] = parse(data.Title, queryMatches);
                     return (
                         <li
-                            key={`${data.title}-${data.year}`}
+                            key={`${data.Id}-${data.Title}`}
                             onClick={() => handleItemSelected(data)}
                         >
                             {textParts.map((part, partIndex) => (

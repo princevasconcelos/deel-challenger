@@ -12,6 +12,16 @@ const escapeRegexCharacters = (str: string) => {
 
 export type MatchType = number[];
 
+/**
+ * The `match` function is used to find the position of a query string within a given text.
+ * 
+ * For example:
+ * Given the text "The Shawshank Redemption" and the query "Redemption", it will return the start and end indexes of the match.
+ * In this case, it will return [[14, 24]].
+ * 
+ * Another example:
+ * Given the text "The Godfather Part II" and the query "God", it will return [[4, 7]].
+ */
 export default function match(text: string, query: string): MatchType[] {
     const options = {
         insideWords: true,

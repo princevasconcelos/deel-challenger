@@ -27,30 +27,6 @@
   width: 300px;
 }
 
-.clear-button {
-  width: 30px;
-  height: 30px;
-  position: absolute;
-  top: calc(50% - 14px);
-  right: -20px;
-  background: transparent;
-  border: none;
-  outline: none;
-  margin: 0;
-  padding: 0;
-  font-size: 16px;
-  color: #999;
-}
-
-.clear-button:hover {
-  border-radius: 50%;
-  background-color: #EEE;
-}
-
-.clear-button:focus {
-  outline: none;
-}
-
 .spinner {
   display: inline-block;
   width: 20px;
@@ -63,10 +39,6 @@
   top: calc(50% - 12px);
   right: -22px;
   transform: translateY(-50%);
-}
-
-.loading-item {
-  color: darkgray;
 }
 
 @keyframes spin {
